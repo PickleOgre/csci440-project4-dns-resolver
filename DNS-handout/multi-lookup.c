@@ -119,6 +119,8 @@ main(int argc, char* argv[])
   pthread_mutex_t counter_lock;
   RequesterArgs requester_args[MAX_INPUT_FILES];
   int i;
+  long nprocs = sysconf(_SC_NPROCESSORS_ONLN);
+  int num_resolvers;
 
   /* Check Arguments */
   if (argc < MINARGS) {
@@ -138,9 +140,9 @@ main(int argc, char* argv[])
   /* create array of file pointers */
   num_files = 0;
   for (i = 0; i < argc - 2; i++) {
-    input_files[i] = fopen(argv[i + 1], "r");
-    if (!input_files[i]) {
-      sprintf(errorstr, "Error Opening Input File: %s", argv[i]);
+    input_files[num_files] = fopen(argv[i + 1], "r");
+    if (!input_files[num_files]) {
+      sprintf(errorstr, "Error Opening Input File: %s", argv[i + 1]);
       perror(errorstr);
       continue;
     }
@@ -155,13 +157,16 @@ main(int argc, char* argv[])
   active_files = num_files;
 
   /* Spawn resolver thread pool */
+  num_resolvers = (int)nprocs;
+  if (num_resolvers < MIN_RESOLVER_THREADS) num_resolvers = MIN_RESOLVER_THREADS;
+  if (num_resolvers > MAX_RESOLVER_THREADS) num_resolvers = MAX_RESOLVER_THREADS;
   ResolverArgs resolver_arg = { .requestq = &requestq,
                                 .queue_lock = &queue_lock,
                                 .output_file = output_file,
                                 .output_lock = &output_lock,
                                 .active_files = &active_files,
                                 .counter_lock = &counter_lock };
-  for (i = 0; i < MAX_RESOLVER_THREADS; i++) {
+  for (i = 0; i < num_resolvers; i++) {
     pthread_create(&resolver_threads[i], NULL, resolve_thr, &resolver_arg);
   }
 
@@ -179,7 +184,7 @@ main(int argc, char* argv[])
   for (i = 0; i < num_files; i++) {
     pthread_join(requester_threads[i], NULL);
   }
-  for (i = 0; i < MAX_RESOLVER_THREADS; i++) {
+  for (i = 0; i < num_resolvers; i++) {
     pthread_join(resolver_threads[i], NULL);
   }
 

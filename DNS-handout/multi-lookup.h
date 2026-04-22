@@ -12,14 +12,15 @@
 #ifndef MULTI_LOOKUP_H
 #define MULTI_LOOKUP_H
 
+#include "queue.h"
+#include "util.h"
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "queue.h"
-#include "util.h"
+#include <unistd.h>
 
 #define MINARGS 3
 #define USAGE "<inputFilePath> <outputFilePath>"
