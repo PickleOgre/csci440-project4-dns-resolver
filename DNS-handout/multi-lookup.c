@@ -6,6 +6,8 @@
  * Description:
  * 	This file contains the threaded
  *      solution to this assignment.
+ *  Extra credit implemented:
+ *    - Match # processes to cores
  *
  */
 
